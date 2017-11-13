@@ -7,45 +7,45 @@ DIFFCMD="diff -Naur"
 OUTFILE="./diff.patch"
 
 list_files() {
- for entry in "$OLD_ROOT/$1"/*
+ for entry in "$OLD_ROOT/$1"*
  do
   if test -f "$entry"; then
-    printf "%s\n" ${entry/$OLD_ROOT/}
+    printf "%s/\n" ${entry/$OLD_ROOT\//}
   fi
  done
- for entry2 in "$NEW_ROOT/$1"/*
+ for entry2 in "$NEW_ROOT/$1"*
  do
    if test -f "$entry2"; then
     if [ ! -e ${entry2/$NEW_ROOT/$OLD_ROOT} ]; then
- 	printf "%s\n" ${entry2/$NEW_ROOT/}
+ 	printf "%s/\n" ${entry2/$NEW_ROOT\//}
     fi
    fi
  done
 }
 
 list_folders() {
- for entry in "$OLD_ROOT/$1"/*
+ for entry in "$OLD_ROOT/$1"*
  do
   if test -d "$entry"; then
-    echo ${entry/$OLD_ROOT/}
+    printf "%s/\n" ${entry/$OLD_ROOT\//}
   fi
  done
- for entry2 in "$NEW_ROOT/$1"/*
+ for entry2 in "$NEW_ROOT/$1"*
  do
    if test -d "$entry2"; then
     if [ ! -e ${entry2/$NEW_ROOT/$OLD_ROOT} ]; then
-        echo ${entry2/$NEW_ROOT/}
+        printf "%s/\n" ${entry2/$NEW_ROOT\//}
     fi
    fi
  done
 }
 
 remove_dot_slash() {
- echo "$1" | sed 's/.\///'
+ printf "$1" | sed 's/\.\///'
 }
 
 diff_all_files() {
- echo "Diffing all files in $1"
+ printf "Diffing all files in $1\n"
  ENTRIES=$(remove_dot_slash "$(list_files $1)")
  for entry in $ENTRIES
  do
@@ -54,7 +54,7 @@ diff_all_files() {
 }
 
 diff_some_files() {
- echo "Diffing some files in $1"
+ printf "Diffing some files in $1\n"
  ENTRIES=$(remove_dot_slash "$(list_files $1)")
  for entry in $ENTRIES
  do
@@ -69,7 +69,7 @@ diff_some_files() {
 
 
 diff_files() {
- echo "$1:"
+ printf "$1:\n"
  read -n1 -p "Diff files in this directory? (all/some/none)" choice
  case "$choice" in
   a|A ) echo "OK"
@@ -83,18 +83,20 @@ diff_files() {
 }
 
 diff_folder() {
- echo "$1:"
-
- ENTRIES=$(remove_dot_slash "$(list_folders "$1")")
+ printf "$1:\n"
+ ENT=$(list_folders "$1")
+ printf $ENT
+ printf "\n"
+ ENTRIES=$(remove_dot_slash "$ENT")
  for things in $ENTRIES
  do
-   printf "%s\n" $things
+   printf "$things :\n"
    read -n1 -p "Directory diff? (all/some/none)" choice
    case "$choice" in
-     a|A ) echo "Diffing the whole folder"
-       $DIFFCMD $OLD_ROOT$1 $NEW_ROOT$1 >> $OUTFILE;;
-     s|S ) echo "Entering directory for evaluation"
-	diff_folder $things;;
+     a|A ) printf "Diffing the whole folder: %s\n" $things
+       $DIFFCMD $OLD_ROOT/$1 $NEW_ROOT/$1 >> $OUTFILE;;
+     s|S ) printf "Entering directory for evaluation: %s\n " $things
+	diff_folder "$things";;
      * ) echo "Ignoring";;
    esac 
  done
@@ -123,11 +125,11 @@ echo -e $NOCOLOR
 #echo "FOLDERS FOLDERS"
 #remove_dot_slash "$(list_folders ".")"
 #echo "FDSASDFDSASDF ASD FJDSASDFDSA ASJDFDJSASDF"
-#ENTRIES=$(remove_dot_slash "$(list_folders ".")")
-#for things in $ENTRIES
-#do
-#  printf "ITEM: %s\n" $things
+ENTRIES=$(remove_dot_slash "$(list_folders "./")")
+for things in $ENTRIES
+do
+  echo "ITEM: " $things
 #  diff_folder $things
-#done
+done
 diff_folder "./"
 echo -e $NOCOLOR
